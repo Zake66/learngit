@@ -1,52 +1,64 @@
 import React, { Component } from 'react';
 import store from './store'
 import 'antd/dist/antd.css';
-import { Input } from 'antd';
-import { Button } from 'antd';
-import { List, Typography } from 'antd';
+import axios from 'axios'
 
-const data = [
-    'Racing car sprays burning fuel into crowd.',
-    'Japanese princess to wed commoner.',
-    'Australian walks 100km after outback crash.',
-    'Man charged over missing wedding girl.',
-    'Los Angeles battles huge wildfires.',
-];
+import  TodoListUI from './TodoListUI'
+import { getAddTodoItemAction, getDeleteTodoItemAction, getInputChangeAction, initListAction , getTodoList} from './store/actionCreators'
+
 
 class TodoList extends Component{
     constructor(props){
         super(props);
         this.state = store.getState();
-        this.handleInputChange = this.handleInputChange.bind(this)
+        //console.log(this.state);
+        this.handleInputChange = this.handleInputChange.bind(this);
+        this.handleStoreChange = this.handleStoreChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
+        this.handleDelete = this.handleDelete.bind(this);
+        store.subscribe(this.handleStoreChange);//订阅store的改变，store一变化handleStoreChange就会被执行
     }
 
     render() {
         return (
-            <div style={{marginTop:'10px', marginLeft:'10px'}}>
-                <Input value={this.state.inputValue}
-                       placeholder={'todo info'}
-                       style={{width: 300, marginRight: '10px'}}
-                       onChange={this.handleInputChange}
-                />
-                <Button type="primary">提交</Button>
-
-                <List
-                    style={{ marginTop:'10px', width:'300px' }}
-                    bordered
-                    dataSource={this.state.list}
-                    renderItem={item => (
-                        <List.Item>{item}</List.Item>
-                    )}
-                />
-            </div>
+            <TodoListUI
+                inputValue = {this.state.inputValue}
+                handleInputChange = {this.handleInputChange}
+                handleSubmit = {this.handleSubmit}
+                list = {this.state.list}
+                handleDelete = {this.handleDelete}
+            />
         )
     }
 
+    componentDidMount() {
+        // axios.get('./list.json').then((res) => {
+        //     const data = res.data;
+        //     const action = initListAction(data);
+        //     store.dispatch(action);
+        // });
+        const action = getTodoList();
+        store.dispatch(action);
+    }
+
     handleInputChange(e){
-        const action = {
-            type: 'change_input_value',
-            value: e.target.value
-        };
+        const action = getInputChangeAction(e.target.value);
+        store.dispatch(action);
+
+    }
+
+    handleSubmit(){
+        const action = getAddTodoItemAction();
+        store.dispatch(action);
+    }
+
+    handleStoreChange(){
+        this.setState(store.getState());
+        //console.log('store have changed!!!');
+    }
+
+    handleDelete(index){
+        const action = getDeleteTodoItemAction(index);
         store.dispatch(action);
     }
 }
